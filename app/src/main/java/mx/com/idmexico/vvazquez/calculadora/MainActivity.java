@@ -2,6 +2,7 @@ package mx.com.idmexico.vvazquez.calculadora;
 
 import android.content.DialogInterface;
 import android.net.Uri;
+import android.support.annotation.IntegerRes;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,10 +17,13 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.text.DecimalFormat;
+
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener {
 
     private EditText eText;
     private String n1="",n2 ="", oper="";
+    private RadioButton rbb, rbd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +48,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         findViewById(R.id.btnRes).setOnClickListener(this);
         findViewById(R.id.btnDel).setOnClickListener(this);
         findViewById(R.id.btnPto).setOnClickListener(this);
+        rbb = (RadioButton) findViewById(R.id.rbtnBin);
+        rbb.setOnClickListener(this);
+        rbd = (RadioButton)findViewById(R.id.rbtnDec);
+        rbd.setOnClickListener(this);
 
         eText = (EditText) findViewById(R.id.txtRes);
     }
@@ -64,60 +72,131 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             case R.id.btn7:
             case R.id.btn8:
             case R.id.btn9:
-                int d = Integer.parseInt(((Button) findViewById(v.getId())).getText().toString());
-                eText.setText(eText.getText().toString().concat(String.format(Integer.toString(d))));
-                if (oper.equals(""))
-                    n1= String.valueOf(d);
-                else
-                    n2= String.valueOf(d);
+                String d = eText.getText().toString() + ((Button)findViewById(v.getId())).getText().toString();
+                if (oper.equals("")) {
+                    n1 = d;
+                    eText.setText(n1);
+                }
+                else {
+                    n2 += d;
+                   eText.setText(n2);
+                }
+
             break;
             case R.id.btnDel:
                 if (eText.getText().length() >0) {
                     eText.setText("");
-                    n1="";
-                    n2="";
-                    oper="";
+                    clean();
                 }
                 break;
             case R.id.btnPto:
-                if (eText.getText().toString().indexOf(".") == -1)
-                    if (eText.getText().toString()== "")
-                        eText.setText(String.format("0").concat("."));
+                String p = eText.getText().toString();
+                if (p.length() == 0)
+                {
+                    p = String.format("0").concat(".");
+                    if (oper.equals("")) {
+                        n1 += p;
+                        eText.setText(n1);
+                    }
+                    else {
+                        n2 += p;
+                        eText.setText(n2);
+                    }
+                }
+                else
+                {
+                    if (p.indexOf(".") == -1) {
+                        if (oper.equals("")) {
+                            n1 += p;
+                            eText.setText(n1);
+                        }
+                        else {
+                            n2 += p;
+                            eText.setText(n2);
+                        }
+                    }
                     else
-                        eText.setText(String.format(eText.getText().toString().concat(".")));
-
+                    {
+                        if (oper.equals("")) {
+                            n1 += p;
+                            eText.setText(n1);
+                        }
+                        else {
+                            n2 += p;
+                            eText.setText(n2);
+                        }
+                    }
+                }
                 break;
             case R.id.btnSuma:
                 oper= "+";
+                eText.setText("");
                 break;
             case R.id.btnResta:
                 oper= "-";
+                eText.setText("");
                 break;
             case R.id.btnMult:
                 oper="*";
+                eText.setText("");
                 break;
             case R.id.btnDiv:
                 oper ="/";
+                eText.setText("");
                 break;
             case R.id.btnMod:
                 oper="%";
+                eText.setText("");
                 break;
             case R.id.btnRes:
                 if (!(n1.trim().equals(""))) {
-                    eText.setText(calculate(oper, n1, n2.equals("") ? n1 : n2));
-                    n1="";
-                    n2="";
-                    oper="";
+                    double res = calculate(oper, n1, n2.equals("") ? n1 : n2);
+                    eText.setText(rbd.isChecked()? String.format(String.valueOf(res)) : Integer.toBinaryString((int) res));
+                    clean();
+                    n1 = rbd.isChecked()? String.format(String.valueOf(res)) : Integer.toBinaryString((int) res);
                 }
+                break;
+            case R.id.rbtnBin:
+                enableButtons(false);
+                eText.setText("");
+                clean();
+                break;
+            case R.id.rbtnDec:
+                enableButtons(true);
+                eText.setText("");
+                clean();
+                break;
 
 
         }
     }
 
-    public String calculate(String oper,String n1, String n2)
+    private void clean()
     {
-        double d1 = Double.parseDouble(n1);
-        double d2 = Double.parseDouble(n2);
+        n1="";
+        n2="";
+        oper="";
+    }
+
+    private void enableButtons(boolean b)
+    {
+        findViewById(R.id.btn2).setEnabled(b);
+        findViewById(R.id.btn3).setEnabled(b);
+        findViewById(R.id.btn4).setEnabled(b);
+        findViewById(R.id.btn5).setEnabled(b);
+        findViewById(R.id.btn6).setEnabled(b);
+        findViewById(R.id.btn7).setEnabled(b);
+        findViewById(R.id.btn8).setEnabled(b);
+        findViewById(R.id.btn9).setEnabled(b);
+        findViewById(R.id.btnMod).setEnabled(b);
+        findViewById(R.id.btnPto).setEnabled(b);
+    }
+
+
+    public Double calculate(String oper,String n1, String n2)
+    {
+        double d1 = rbd.isChecked()? Double.parseDouble(n1): Integer.parseInt(n1,2);
+        double d2 = rbd.isChecked()? Double.parseDouble(n2): Integer.parseInt(n2,2);
         double r=0;
         switch (oper)
         {
@@ -134,12 +213,15 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 if (d2!=0)
                     r= d1/d2;
                 else
-                    return "Error";
+                    r=0;
                 break;
             case "%":
                 r= d1%d2;
                 break;
         }
-        return Double.toString(r);
+        //return Double.toString(r);
+        return r;
     }
+
+
 }
