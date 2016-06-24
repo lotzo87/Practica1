@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                     eText.setText(n1);
                 }
                 else {
-                    n2 += d;
+                    n2 = d;
                    eText.setText(n2);
                 }
 
